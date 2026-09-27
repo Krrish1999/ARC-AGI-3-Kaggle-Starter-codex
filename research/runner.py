@@ -87,8 +87,8 @@ def play(strategy: str, game: str, seed: int, run_id: str, timeout: int) -> dict
             trace = {"trace_parse_error": str(exc)}
 
     if not trace:
-    rc = rc or 70  # exited clean but played nothing — treat as failure
-    stderr = (stderr or "") + f"\nNO TRACE at {trace_path}; agent never ran"
+        rc = rc or 70  # exited clean but played nothing — treat as failure
+        stderr = (stderr or "") + f"\nNO TRACE at {trace_path}; agent never ran"
 
     return {
         "strategy": strategy,
