@@ -41,27 +41,13 @@ if not Path(PYTHON).exists():
 
 
 def list_games() -> list[str]:
-    """Ask the Makefile which games exist. Falls back to an empty list."""
-    try:
-        out = subprocess.run(
-            ["make", "list-games"],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            timeout=120,
-        ).stdout
-    except Exception as exc:  # noqa: BLE001
-        print(f"[runner] could not list games: {exc}")
-        return []
-
-    games: list[str] = []
-    for line in out.splitlines():
-        tok = line.strip()
-        # game ids look like `ls20`, `ft09-abc123`; skip make's own chatter
-        if tok and " " not in tok and not tok.startswith(("make", "#", "-")):
-            games.append(tok)
-    return games
-
+    cache = ROOT / "environment_files"
+    if cache.is_dir():
+        games = sorted(p.name for p in cache.iterdir() if p.is_dir())
+        if games:
+            return games
+    print(f"[runner] {cache} is empty — setup did not warm the cache")
+    return []
 
 # ---------------------------------------------------------------------------
 # single run
@@ -99,6 +85,10 @@ def play(strategy: str, game: str, seed: int, run_id: str, timeout: int) -> dict
             trace = json.loads(trace_path.read_text())
         except Exception as exc:  # noqa: BLE001
             trace = {"trace_parse_error": str(exc)}
+
+    if not trace:
+    rc = rc or 70  # exited clean but played nothing — treat as failure
+    stderr = (stderr or "") + f"\nNO TRACE at {trace_path}; agent never ran"
 
     return {
         "strategy": strategy,
